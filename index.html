@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Стажировка День 1</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f5f5f0;min-height:100vh;display:flex;justify-content:center;padding:20px}
+.wrap{max-width:360px;width:100%;display:flex;flex-direction:column;align-items:center;gap:14px}
+.header{text-align:center}
+.header-title{font-size:18px;font-weight:700;color:#333}
+.header-sub{font-size:12px;color:#888;margin-top:3px}
+.badge-row{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.bp{background:#EEEDFE;color:#534AB7}
+.bg{background:#EAF3DE;color:#3B6D11}
+.ba{background:#FAEEDA;color:#854F0B}
+.status{font-size:12px;padding:5px 12px;border-radius:20px;font-weight:500}
+.st-ok{background:#EAF3DE;color:#3B6D11}
+.st-wait{background:#FAEEDA;color:#854F0B}
+.st-err{background:#FCEBEB;color:#A32D2D}
+
+.face{background:white;border-radius:20px;border:1px solid #e8e8e4;padding:24px 20px;width:100%;text-align:center}
+.start-time{font-size:11px;color:#aaa;margin-bottom:8px;min-height:16px}
+.big-time{font-size:64px;font-weight:700;font-variant-numeric:tabular-nums;color:#1a1a18;letter-spacing:-2px;line-height:1}
+.ms{font-size:24px;font-weight:400;color:#aaa}
+.phase-label{font-size:13px;color:#534AB7;font-weight:500;margin-top:10px}
+
+.laps{background:white;border-radius:14px;border:1px solid #e8e8e4;padding:12px 14px;width:100%;max-height:160px;overflow-y:auto}
+.laps-title{font-size:10px;color:#aaa;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.lap-item{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid #f5f5f0}
+.lap-item:last-child{border-bottom:none}
+.lap-num{color:#888}
+.lap-time{font-weight:600;color:#333}
+.lap-split{color:#aaa;font-size:11px}
+
+.btn-row{display:flex;gap:10px;justify-content:center}
+.btn-start{padding:14px 36px;border-radius:12px;border:none;background:#7F77DD;color:white;font-size:16px;font-weight:700;cursor:pointer;transition:all .15s}
+.btn-start:hover{background:#534AB7}
+.btn-start.running{background:#E24B4A}
+.btn-start.running:hover{background:#A32D2D}
+.btn-lap{padding:14px 20px;border-radius:12px;border:1px solid #e8e8e4;background:white;color:#333;font-size:14px;cursor:pointer}
+.btn-lap:hover{background:#f5f5f0}
+.btn-reset{padding:14px 16px;border-radius:12px;border:1px solid #e8e8e4;background:white;color:#888;font-size:14px;cursor:pointer}
+
+.report{background:white;border-radius:14px;border:2px solid #1D9E75;padding:14px 16px;width:100%;display:none}
+.report-title{font-size:14px;font-weight:700;color:#085041;margin-bottom:10px}
+.rrow{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #f5f5f0}
+.rrow:last-child{border-bottom:none}
+.rl{color:#888}.rv{font-weight:600;color:#333}
+.xp-big{font-size:26px;font-weight:700;color:#534AB7;text-align:center;padding:6px 0}
+
+.sync-info{font-size:11px;color:#aaa;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="header">
+  <div class="header-title">📋 Стажировка Тинькофф</div>
+  <div class="header-sub">День 1 из 5</div>
+</div>
+
+<div class="badge-row">
+  <span class="badge bp">💼 Работа</span>
+  <span class="badge bg">День 1/5</span>
+  <span class="badge ba" id="date-badge">загрузка...</span>
+</div>
+
+<div class="status st-wait" id="status">🔄 Подключение...</div>
+
+<div class="face">
+  <div class="start-time" id="start-time">—</div>
+  <div>
+    <span class="big-time" id="display">00:00:00</span><span class="ms" id="ms-display">.00</span>
+  </div>
+  <div class="phase-label" id="phase-label">Нажми Старт чтобы начать</div>
+</div>
+
+<div class="btn-row">
+  <button class="btn-start" id="btn-main" onclick="toggleSW()">▶ Старт</button>
+  <button class="btn-lap" onclick="addLap()">🏁 Круг</button>
+  <button class="btn-reset" onclick="resetSW()">↺</button>
+</div>
+
+<div class="laps" id="laps-wrap" style="display:none">
+  <div class="laps-title">🏁 Круги / события</div>
+  <div id="laps-list"></div>
+</div>
+
+<div class="report" id="report">
+  <div class="report-title">✅ День 1 завершён!</div>
+  <div class="xp-big" id="xp-out">+120 XP</div>
+  <div class="rrow"><span class="rl">📅 Дата</span><span class="rv" id="r-date">—</span></div>
+  <div class="rrow"><span class="rl">⏱ Всего</span><span class="rv" id="r-total">—</span></div>
+  <div class="rrow"><span class="rl">🏁 Кругов</span><span class="rv" id="r-laps">—</span></div>
+  <div class="rrow"><span class="rl">💼 Сфера</span><span class="rv" style="color:#1D9E75">Работа ✅</span></div>
+</div>
+
+<div class="sync-info" id="sync-info">Firebase синхронизация активна</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-database-compat.min.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBAqqdNTUeo1fHyrMT9Op-r7veH2dqqLio",
+  authDomain: "marat-timer.firebaseapp.com",
+  databaseURL: "https://marat-timer-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "marat-timer",
+  storageBucket: "marat-timer.firebasestorage.app",
+  messagingSenderId: "608541524642",
+  appId: "1:608541524642:web:436d6afba0dad045a98dfb"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const swRef = db.ref('stopwatch_day1');
+
+var localInterval = null;
+var isRunning = false;
+var startTs = null;
+var pausedAt = 0;
+var laps = [];
+var lastLapTs = 0;
+
+var now = new Date();
+document.getElementById('date-badge').textContent = now.toLocaleDateString('ru-RU',{day:'numeric',month:'long'});
+
+function fmt(ms){
+  var s=Math.floor(ms/1000);
+  var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
+  return(h>0?(h<10?'0':'')+h+':':'')+(m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;
+}
+function fmtMs(ms){return '.'+String(Math.floor((ms%1000)/10)).padStart(2,'0');}
+function fmtTime(ts){
+  var d=new Date(ts);
+  return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0');
+}
+
+function getElapsed(){
+  if(!startTs) return pausedAt;
+  return pausedAt + (Date.now() - startTs);
+}
+
+function tick(){
+  var el=getElapsed();
+  document.getElementById('display').textContent=fmt(el);
+  document.getElementById('ms-display').textContent=fmtMs(el);
+}
+
+function toggleSW(){
+  if(isRunning){
+    var el=getElapsed();
+    swRef.update({running:false,pausedAt:el,startTs:null,updatedAt:Date.now()});
+  }else{
+    var now2=Date.now();
+    var data={running:true,startTs:now2,pausedAt:pausedAt,updatedAt:now2};
+    if(!startTs&&pausedAt===0){
+      data.startedAt=now2;
+      data.laps=[];
+    }
+    swRef.update(data);
+  }
+}
+
+function addLap(){
+  var el=getElapsed();
+  if(el===0)return;
+  var split=el-(lastLapTs||0);
+  var lap={n:(laps.length+1),total:el,split:split,ts:Date.now()};
+  laps.push(lap);
+  lastLapTs=el;
+  swRef.update({laps:laps});
+  renderLaps();
+}
+
+function resetSW(){
+  if(!confirm('Сбросить секундомер?'))return;
+  clearInterval(localInterval);
+  swRef.set({running:false,startTs:null,pausedAt:0,startedAt:null,laps:[],updatedAt:Date.now()});
+}
+
+function finishDay(){
+  clearInterval(localInterval);
+  var el=getElapsed();
+  var hours=Math.floor(el/3600000);
+  var mins=Math.floor((el%3600000)/60000);
+  var xp=Math.min(200,Math.round(el/60000*1.5+50));
+  document.getElementById('report').style.display='block';
+  document.getElementById('r-date').textContent=new Date().toLocaleDateString('ru-RU');
+  document.getElementById('r-total').textContent=(hours>0?hours+'ч ':'')+mins+'мин';
+  document.getElementById('r-laps').textContent=laps.length;
+  document.getElementById('xp-out').textContent='+'+xp+' XP';
+  document.getElementById('phase-label').textContent='День завершён! 🎉';
+}
+
+function renderLaps(){
+  if(laps.length===0){document.getElementById('laps-wrap').style.display='none';return;}
+  document.getElementById('laps-wrap').style.display='block';
+  var el=document.getElementById('laps-list');el.innerHTML='';
+  laps.slice().reverse().forEach(function(l){
+    var d=document.createElement('div');d.className='lap-item';
+    d.innerHTML='<span class="lap-num">Круг '+l.n+'</span>'+
+      '<span class="lap-time">'+fmt(l.total)+'</span>'+
+      '<span class="lap-split">+'+fmt(l.split)+'</span>';
+    el.appendChild(d);
+  });
+}
+
+swRef.on('value',function(snap){
+  var data=snap.val();
+  document.getElementById('status').className='status st-ok';
+  document.getElementById('status').textContent='✅ Синхронизировано';
+
+  if(!data){
+    document.getElementById('display').textContent='00:00:00';
+    document.getElementById('ms-display').textContent='.00';
+    document.getElementById('phase-label').textContent='Нажми Старт чтобы начать';
+    document.getElementById('btn-main').textContent='▶ Старт';
+    document.getElementById('btn-main').className='btn-start';
+    return;
+  }
+
+  laps=data.laps||[];
+  pausedAt=data.pausedAt||0;
+  isRunning=data.running||false;
+  lastLapTs=laps.length>0?laps[laps.length-1].total:0;
+
+  if(data.startedAt){
+    document.getElementById('start-time').textContent='🕐 Начало: '+fmtTime(data.startedAt)+' · '+new Date(data.startedAt).toLocaleDateString('ru-RU');
+  }
+
+  renderLaps();
+
+  clearInterval(localInterval);
+  if(isRunning&&data.startTs){
+    startTs=data.startTs;
+    document.getElementById('btn-main').textContent='⏸ Пауза';
+    document.getElementById('btn-main').className='btn-start running';
+    document.getElementById('phase-label').textContent='⏱ Стажировка идёт...';
+    localInterval=setInterval(tick,50);
+    document.getElementById('sync-info').textContent='🟢 Синхронизация активна · открой на компе тоже!';
+  }else{
+    startTs=null;
+    tick();
+    document.getElementById('btn-main').textContent=pausedAt>0?'▶ Продолжить':'▶ Старт';
+    document.getElementById('btn-main').className='btn-start';
+    if(pausedAt>0) document.getElementById('phase-label').textContent='⏸ На паузе';
+    else document.getElementById('phase-label').textContent='Нажми Старт чтобы начать';
+  }
+},function(err){
+  document.getElementById('status').className='status st-err';
+  document.getElementById('status').textContent='❌ '+err.message;
+});
+
+db.ref('.info/connected').on('value',function(s){
+  if(!s.val()){
+    document.getElementById('status').className='status st-wait';
+    document.getElementById('status').textContent='🔄 Переподключение...';
+  }
+});
+
+document.getElementById('btn-main');
+</script>
+</body>
+  </html>
